@@ -81,6 +81,10 @@ func setupBlockstore(cfg *Config, kp *secp256k1.Keypair) (*blockstore.Blockstore
 			return nil, err
 		}
 
+		if latestBlock == nil{
+			latestBlock = new(big.Int).SetInt64(0)
+		}
+
 		if latestBlock.Cmp(cfg.startBlock) == 1 {
 			cfg.startBlock = latestBlock
 		}

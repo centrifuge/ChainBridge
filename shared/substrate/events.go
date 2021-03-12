@@ -150,8 +150,8 @@ type EventNftTransferred struct {
 // EventRegistryMint is emitted when successfully minting an NFT
 type EventRegistryMint struct {
 	Phase      types.Phase
-	RegistryId RegistryId
-	TokenId    TokenId
+	RegistryID types.H160
+	TokenID    types.U256
 	Topics     []types.Hash
 }
 
