@@ -9,6 +9,14 @@ import (
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 )
 
+// EventClaimsClaimed is emitted when an account claims some CFGs
+type EventClaimsClaimed struct {
+	Phase  types.Phase
+	Who    types.AccountID
+	Amount types.U128
+	Topics []types.Hash
+}
+
 type EventErc721Minted struct {
 	Phase   types.Phase
 	Owner   types.AccountID
@@ -175,6 +183,7 @@ type Events struct {
 	types.EventRecords
 	events.Events
 	cEvents
+	Claims_Claimed           []EventClaimsClaimed           //nolint:stylecheck,golint
 	Erc721_Minted            []EventErc721Minted            //nolint:stylecheck,golint
 	Erc721_Transferred       []EventErc721Transferred       //nolint:stylecheck,golint
 	Erc721_Burned            []EventErc721Burned            //nolint:stylecheck,golint
