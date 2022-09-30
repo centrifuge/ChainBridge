@@ -70,8 +70,8 @@ github.com/centrifuge/chainbridge-substrate-events v0.0.0-20220215222726-8c1d3a5
 github.com/centrifuge/chainbridge-substrate-events v0.0.0-20220215222726-8c1d3a5cad10/go.mod h1:e5ffvnL405ZXm5n2inQQqDeIWpa6o7FNRwx1QQC8mWo=
 github.com/centrifuge/chainbridge-utils v1.1.0 h1:YfzGEPf4ClT2x2gftDErhKb0NYM6isxUQM/kY3QTNLs=
 github.com/centrifuge/chainbridge-utils v1.1.0/go.mod h1:2T2eFtxy3pDZhk+QlpwV4a5lV+lDzwazAWr8hFmKyaE=
-github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.5-0.20220804161806-770d7e202e80 h1:tycAEX8nz8Xf1LcjGQVeivtM4GOz5zy3ZuW9OLyuRQk=
-github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.5-0.20220804161806-770d7e202e80/go.mod h1:5g1oM4Zu3BOaLpsKQ+O8PAv2kNuq+kPcA1VzFbsSqxE=
+github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.8-0.20220930212708-8350785ebd6f h1:ViqBO7wRWBLsBHQlDwohHFDPetUUGsGk8KujnnqPzNo=
+github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.8-0.20220930212708-8350785ebd6f/go.mod h1:5g1oM4Zu3BOaLpsKQ+O8PAv2kNuq+kPcA1VzFbsSqxE=
 github.com/cespare/cp v0.1.0 h1:SE+dxFebS7Iik5LK0tsi1k9ZCxEaFX4AjQmoyA+1dJk=
 github.com/cespare/cp v0.1.0/go.mod h1:SOGHArjBr4JWaSDEVpWpo/hNg6RoKrls6Oh40hiwW+s=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
