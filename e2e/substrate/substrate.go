@@ -5,6 +5,8 @@ package substrate
 
 import (
 	"fmt"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
+	"golang.org/x/crypto/blake2b"
 	"os"
 	"testing"
 	"time"
@@ -30,9 +32,18 @@ var DaveKp = keystore.TestKeyRing.SubstrateKeys[keystore.DaveKey]
 var EveKp = keystore.TestKeyRing.SubstrateKeys[keystore.EveKey]
 
 var RelayerSet = []types.AccountID{
-	types.NewAccountID(BobKp.AsKeyringPair().PublicKey),
-	types.NewAccountID(CharlieKp.AsKeyringPair().PublicKey),
-	types.NewAccountID(DaveKp.AsKeyringPair().PublicKey),
+	*MustRetrieveAccountID(BobKp.AsKeyringPair().PublicKey),
+	*MustRetrieveAccountID(CharlieKp.AsKeyringPair().PublicKey),
+	*MustRetrieveAccountID(DaveKp.AsKeyringPair().PublicKey),
+}
+
+func MustRetrieveAccountID(pubKey []byte) *types.AccountID {
+	accID, err := types.NewAccountID(pubKey)
+	if err != nil {
+		panic(fmt.Errorf("couldn't create new account ID: %w", err))
+	}
+
+	return accID
 }
 
 func CreateConfig(key string, chain msg.ChainId) *core.ChainConfig {
@@ -68,7 +79,7 @@ func WaitForProposalSuccessOrFail(t *testing.T, client *utils.Client, nonce type
 			t.Fatalf("Timed out waiting for proposal success/fail event")
 		case set := <-sub.Chan():
 			for _, chng := range set.Changes {
-				if !types.Eq(chng.StorageKey, key) || !chng.HasStorageData {
+				if !codec.Eq(chng.StorageKey, key) || !chng.HasStorageData {
 					// skip, we are only interested in events with content
 					continue
 				}
@@ -104,9 +115,9 @@ func WaitForProposalSuccessOrFail(t *testing.T, client *utils.Client, nonce type
 }
 
 func HashInt(i int) types.Hash {
-	hash, err := types.GetHash(types.NewI64(int64(i)))
+	bytes, err := codec.Encode(types.NewI64(int64(i)))
 	if err != nil {
 		panic(err)
 	}
-	return hash
+	return blake2b.Sum256(bytes)
 }

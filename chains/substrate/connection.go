@@ -5,6 +5,7 @@ package substrate
 
 import (
 	"fmt"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
 	"sync"
 
 	utils "github.com/ChainSafe/ChainBridge/shared/substrate"
@@ -185,7 +186,7 @@ func getConst(meta *types.Metadata, prefix, name string, res interface{}) error 
 		if string(mod.Name) == prefix {
 			for _, cons := range mod.Constants {
 				if string(cons.Name) == name {
-					return types.Decode(cons.Value, res)
+					return codec.Decode(cons.Value, res)
 				}
 			}
 		}
