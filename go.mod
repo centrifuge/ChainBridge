@@ -5,17 +5,18 @@ go 1.18
 // NOTE - this is a specific branch - https://github.com/centrifuge/go-substrate-rpc-client/tree/remove-claims-event,
 // that does not have the `Claims_Claimed` event since it is colliding with the one that we have in the claims pallet
 // of Centrifuge chain.
-require github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.5-0.20220804161806-770d7e202e80
+require github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.8-0.20220930212708-8350785ebd6f
 
 require (
 	github.com/ChainSafe/log15 v1.0.0
 	github.com/centrifuge/chain-custom-types v0.0.0-20220323235722-1cdf9a3ad7f1
 	github.com/centrifuge/chainbridge-substrate-events v0.0.0-20220215222726-8c1d3a5cad10
-	github.com/centrifuge/chainbridge-utils v1.1.0
+	github.com/centrifuge/chainbridge-utils v1.1.1-0.20221001051926-ecac2af5cb68
 	github.com/ethereum/go-ethereum v1.10.17
 	github.com/prometheus/client_golang v1.4.1
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli/v2 v2.3.0
+	golang.org/x/crypto v0.0.0-20220926161630-eccd6366d1be
 )
 
 require (
@@ -23,7 +24,6 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.1.2 // indirect
-	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d // indirect
@@ -56,8 +56,7 @@ require (
 	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	github.com/tklauser/numcpus v0.2.2 // indirect
 	github.com/vedhavyas/go-subkey v1.0.3 // indirect
-	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90 // indirect
-	golang.org/x/sys v0.0.0-20220913175220-63ea55921009 // indirect
+	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
 	golang.org/x/term v0.0.0-20210503060354-a79de5458b56 // indirect
 	google.golang.org/protobuf v1.23.0 // indirect
 	gopkg.in/natefinch/npipe.v2 v2.0.0-20160621034901-c1b8fa8bdcce // indirect

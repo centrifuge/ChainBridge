@@ -4,6 +4,7 @@
 package substrate
 
 import (
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
 	"math/big"
 
 	"github.com/centrifuge/chainbridge-utils/msg"
@@ -52,7 +53,7 @@ type proposal struct {
 
 // encode takes only nonce and call and encodes them for storage queries
 func (p *proposal) encode() ([]byte, error) {
-	return types.Encode(struct {
+	return codec.Encode(struct {
 		types.U64
 		types.Call
 	}{p.depositNonce, p.call})
@@ -61,7 +62,10 @@ func (p *proposal) encode() ([]byte, error) {
 func (w *writer) createFungibleProposal(m msg.Message) (*proposal, error) {
 	bigAmt := big.NewInt(0).SetBytes(m.Payload[0].([]byte))
 	amount := types.NewU128(*bigAmt)
-	recipient := types.NewAccountID(m.Payload[1].([]byte))
+	recipient, err := types.NewAccountID(m.Payload[1].([]byte))
+	if err != nil {
+		return nil, err
+	}
 	depositNonce := types.U64(m.DepositNonce)
 
 	meta := w.conn.getMetadata()
@@ -79,7 +83,7 @@ func (w *writer) createFungibleProposal(m msg.Message) (*proposal, error) {
 		return nil, err
 	}
 	if w.extendCall {
-		eRID, err := types.Encode(m.ResourceId)
+		eRID, err := codec.Encode(m.ResourceId)
 		if err != nil {
 			return nil, err
 		}
@@ -97,7 +101,10 @@ func (w *writer) createFungibleProposal(m msg.Message) (*proposal, error) {
 
 func (w *writer) createNonFungibleProposal(m msg.Message) (*proposal, error) {
 	tokenId := types.NewU256(*big.NewInt(0).SetBytes(m.Payload[0].([]byte)))
-	recipient := types.NewAccountID(m.Payload[1].([]byte))
+	recipient, err := types.NewAccountID(m.Payload[1].([]byte))
+	if err != nil {
+		return nil, err
+	}
 	metadata := types.Bytes(m.Payload[2].([]byte))
 	depositNonce := types.U64(m.DepositNonce)
 
@@ -118,7 +125,7 @@ func (w *writer) createNonFungibleProposal(m msg.Message) (*proposal, error) {
 		return nil, err
 	}
 	if w.extendCall {
-		eRID, err := types.Encode(m.ResourceId)
+		eRID, err := codec.Encode(m.ResourceId)
 		if err != nil {
 			return nil, err
 		}
@@ -150,7 +157,7 @@ func (w *writer) createGenericProposal(m msg.Message) (*proposal, error) {
 		return nil, err
 	}
 	if w.extendCall {
-		eRID, err := types.Encode(m.ResourceId)
+		eRID, err := codec.Encode(m.ResourceId)
 		if err != nil {
 			return nil, err
 		}

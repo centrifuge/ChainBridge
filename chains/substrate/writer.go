@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
 	"time"
 
 	"github.com/centrifuge/chainbridge-utils/core"
@@ -112,7 +113,7 @@ func (w *writer) resolveResourceId(id [32]byte) (string, error) {
 // has not voted, it will return true. Otherwise, it will return false with a reason string.
 func (w *writer) proposalValid(prop *proposal) (bool, string, error) {
 	var voteRes voteState
-	srcId, err := types.Encode(prop.sourceId)
+	srcId, err := codec.Encode(prop.sourceId)
 	if err != nil {
 		return false, "", err
 	}
@@ -128,8 +129,12 @@ func (w *writer) proposalValid(prop *proposal) (bool, string, error) {
 	if !exists {
 		return true, "", nil
 	} else if voteRes.Status.IsActive {
-		if containsVote(voteRes.VotesFor, types.NewAccountID(w.conn.key.PublicKey)) ||
-			containsVote(voteRes.VotesAgainst, types.NewAccountID(w.conn.key.PublicKey)) {
+		accountID, err := types.NewAccountID(w.conn.key.PublicKey)
+		if err != nil {
+			return false, "", err
+		}
+		if containsVote(voteRes.VotesFor, *accountID) ||
+			containsVote(voteRes.VotesAgainst, *accountID) {
 			return false, "already voted", nil
 		} else {
 			return true, "", nil
