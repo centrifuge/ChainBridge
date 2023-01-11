@@ -5,7 +5,7 @@ go 1.18
 // NOTE - this is a specific branch - https://github.com/centrifuge/go-substrate-rpc-client/tree/remove-claims-event,
 // that does not have the `Claims_Claimed` event since it is colliding with the one that we have in the claims pallet
 // of Centrifuge chain.
-require github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.9-0.20221020092839-fde747ab503a
+require github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.13-0.20230111181438-6501f611f49f
 
 require (
 	github.com/ChainSafe/log15 v1.0.0
