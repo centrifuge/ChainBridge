@@ -64,8 +64,6 @@ github.com/btcsuite/btcd/chaincfg/chainhash v1.0.0/go.mod h1:7SFka0XMvUgj3hfZtyd
 github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce h1:YtWJF7RHm2pYCvA5t0RPmAaLUhREsKuKd+SLhxFbFeQ=
 github.com/c-bata/go-prompt v0.2.2/go.mod h1:VzqtzE2ksDBcdln8G7mk2RX9QyGjH+OVqOCSiVIqS34=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=
-github.com/centrifuge/chain-custom-types v0.0.0-20220323235722-1cdf9a3ad7f1 h1:i72MKnaZ//Nw9T1bJT4PdpfXGfKGckzkHHf97FKyRDI=
-github.com/centrifuge/chain-custom-types v0.0.0-20220323235722-1cdf9a3ad7f1/go.mod h1:E+MHt0riACBcD/pPctnW6h6BLNa5BRWF49uz31yFUfQ=
 github.com/centrifuge/chainbridge-substrate-events v0.0.0-20220215222726-8c1d3a5cad10 h1:KNpThzo0t8/jpOiY3b2IWSpvksev0XKIR+8mxbNU0zY=
 github.com/centrifuge/chainbridge-substrate-events v0.0.0-20220215222726-8c1d3a5cad10/go.mod h1:e5ffvnL405ZXm5n2inQQqDeIWpa6o7FNRwx1QQC8mWo=
 github.com/centrifuge/chainbridge-utils v1.1.1-0.20221001051926-ecac2af5cb68 h1:DAm8uyQPQnk8DrV0/BHzzPGiOcK3tL1RRHaX9eqY54U=

@@ -9,7 +9,6 @@ require github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.13-0.2023011118143
 
 require (
 	github.com/ChainSafe/log15 v1.0.0
-	github.com/centrifuge/chain-custom-types v0.0.0-20220323235722-1cdf9a3ad7f1
 	github.com/centrifuge/chainbridge-substrate-events v0.0.0-20220215222726-8c1d3a5cad10
 	github.com/centrifuge/chainbridge-utils v1.1.1-0.20221001051926-ecac2af5cb68
 	github.com/ethereum/go-ethereum v1.10.17
