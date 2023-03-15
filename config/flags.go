@@ -92,6 +92,10 @@ var (
 		Usage: "Specify the network to use for the address encoding (42/1/36)",
 		Value: 42,
 	}
+	FromBlockNumberFlag = &cli.StringFlag{
+		Name:  "fromBlock",
+		Usage: "block number",
+	}
 )
 
 // Test Setting Flags

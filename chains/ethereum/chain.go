@@ -211,6 +211,26 @@ func (c *Chain) Id() msg.ChainId {
 	return c.cfg.Id
 }
 
+func (c *Chain) GetBridgeContract() *bridge.Bridge {
+	return c.writer.bridgeContract
+}
+
+func (c *Chain) GetERC20HandlerContract() *erc20Handler.ERC20Handler {
+	return c.listener.erc20HandlerContract
+}
+
+func (c *Chain) GetERC20HandlerAddress() common.Address {
+	return c.listener.cfg.erc20HandlerContract
+}
+
+func (c *Chain) GetCallOpts() *bind.CallOpts {
+	return c.conn.CallOpts()
+}
+
+func (c *Chain) GetLatestHeaderBlock() (*big.Int, error) {
+	return c.conn.LatestBlock()
+}
+
 func (c *Chain) Name() string {
 	return c.cfg.Name
 }

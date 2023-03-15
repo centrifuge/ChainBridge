@@ -47,6 +47,11 @@ var generateFlags = []cli.Flag{
 	config.SubkeyNetworkFlag,
 }
 
+var monitorFlags = []cli.Flag{
+	config.ConfigFileFlag,
+	config.FromBlockNumberFlag,
+}
+
 var devFlags = []cli.Flag{
 	config.TestKeyFlag,
 }
@@ -97,6 +102,21 @@ var accountCommand = cli.Command{
 	},
 }
 
+var monitorCommand = cli.Command{
+	Name:        "monitor",
+	Usage:       "monitors bridge transactions",
+	Description: "",
+	Subcommands: []*cli.Command{
+		{
+			Action:      runMonitor(),
+			Name:        "run",
+			Usage:       "Runs Monitor from block provided",
+			Flags:       monitorFlags,
+			Description: "",
+		},
+	},
+}
+
 var (
 	Version = "0.0.1"
 )
@@ -112,6 +132,7 @@ func init() {
 	app.EnableBashCompletion = true
 	app.Commands = []*cli.Command{
 		&accountCommand,
+		&monitorCommand,
 	}
 
 	app.Flags = append(app.Flags, cliFlags...)
