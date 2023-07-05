@@ -6,50 +6,64 @@ package substrate
 import (
 	"errors"
 	"fmt"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/registry/parser"
 	"math/big"
 	"time"
 
 	"github.com/ChainSafe/ChainBridge/chains"
-	utils "github.com/ChainSafe/ChainBridge/shared/substrate"
 	"github.com/ChainSafe/log15"
 	"github.com/centrifuge/chainbridge-utils/blockstore"
 	metrics "github.com/centrifuge/chainbridge-utils/metrics/types"
 	"github.com/centrifuge/chainbridge-utils/msg"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/registry/retriever"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 )
 
 type listener struct {
-	name          string
-	chainId       msg.ChainId
-	startBlock    uint64
-	blockstore    blockstore.Blockstorer
-	conn          *Connection
-	subscriptions map[eventName]eventHandler // Handlers for specific events
-	router        chains.Router
-	log           log15.Logger
-	stop          <-chan int
-	sysErr        chan<- error
-	latestBlock   metrics.LatestBlock
-	metrics       *metrics.ChainMetrics
+	name           string
+	chainId        msg.ChainId
+	startBlock     uint64
+	blockstore     blockstore.Blockstorer
+	conn           *Connection
+	subscriptions  map[eventName]eventHandler // Handlers for specific events
+	router         chains.Router
+	log            log15.Logger
+	stop           <-chan int
+	sysErr         chan<- error
+	latestBlock    metrics.LatestBlock
+	metrics        *metrics.ChainMetrics
+	eventRetriever retriever.EventRetriever
 }
 
 // Frequency of polling for a new block
 var BlockRetryInterval = time.Second * 5
 var BlockRetryLimit = 5
 
-func NewListener(conn *Connection, name string, id msg.ChainId, startBlock uint64, log log15.Logger, bs blockstore.Blockstorer, stop <-chan int, sysErr chan<- error, m *metrics.ChainMetrics) *listener {
+func NewListener(
+	conn *Connection,
+	name string,
+	id msg.ChainId,
+	startBlock uint64,
+	log log15.Logger,
+	bs blockstore.Blockstorer,
+	stop <-chan int,
+	sysErr chan<- error,
+	m *metrics.ChainMetrics,
+	eventRetriever retriever.EventRetriever,
+) *listener {
 	return &listener{
-		name:          name,
-		chainId:       id,
-		startBlock:    startBlock,
-		blockstore:    bs,
-		conn:          conn,
-		subscriptions: make(map[eventName]eventHandler),
-		log:           log,
-		stop:          stop,
-		sysErr:        sysErr,
-		latestBlock:   metrics.LatestBlock{LastUpdated: time.Now()},
-		metrics:       m,
+		name:           name,
+		chainId:        id,
+		startBlock:     startBlock,
+		blockstore:     bs,
+		conn:           conn,
+		subscriptions:  make(map[eventName]eventHandler),
+		log:            log,
+		stop:           stop,
+		sysErr:         sysErr,
+		latestBlock:    metrics.LatestBlock{LastUpdated: time.Now()},
+		metrics:        m,
+		eventRetriever: eventRetriever,
 	}
 }
 
@@ -186,58 +200,58 @@ func (l *listener) pollBlocks() error {
 // processEvents fetches a block and parses out the events, calling Listener.handleEvents()
 func (l *listener) processEvents(hash types.Hash) error {
 	l.log.Trace("Fetching events for block", "hash", hash.Hex())
-	meta := l.conn.getMetadata()
-	key, err := types.CreateStorageKey(&meta, "System", "Events", nil, nil)
+
+	events, err := l.eventRetriever.GetEvents(hash)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("event retrieving error: %w", err)
 	}
 
-	var records types.EventRecordsRaw
-	_, err = l.conn.api.RPC.State.GetStorage(key, &records, hash)
-	if err != nil {
-		return err
-	}
-
-	e := utils.Events{}
-	err = records.DecodeEventRecords(&meta, &e)
-	if err != nil {
-		return err
-	}
-
-	l.handleEvents(e)
+	l.handleEvents(events)
 	l.log.Trace("Finished processing events", "block", hash.Hex())
 
 	return nil
 }
 
 // handleEvents calls the associated handler for all registered event types
-func (l *listener) handleEvents(evts utils.Events) {
-	if l.subscriptions[FungibleTransfer] != nil {
-		for _, evt := range evts.ChainBridge_FungibleTransfer {
+func (l *listener) handleEvents(events []*parser.Event) {
+	for _, event := range events {
+		if l.subscriptions[FungibleTransfer] != nil {
+			if event.Name != string(FungibleTransfer) {
+				continue
+			}
+
 			l.log.Trace("Handling FungibleTransfer event")
-			l.submitMessage(l.subscriptions[FungibleTransfer](evt, l.log))
+			l.submitMessage(l.subscriptions[FungibleTransfer](event.Fields, l.log))
 		}
-	}
-	if l.subscriptions[NonFungibleTransfer] != nil {
-		for _, evt := range evts.ChainBridge_NonFungibleTransfer {
+
+		if l.subscriptions[NonFungibleTransfer] != nil {
+			if event.Name != string(NonFungibleTransfer) {
+				continue
+			}
+
 			l.log.Trace("Handling NonFungibleTransfer event")
-			l.submitMessage(l.subscriptions[NonFungibleTransfer](evt, l.log))
+			l.submitMessage(l.subscriptions[NonFungibleTransfer](event.Fields, l.log))
 		}
-	}
-	if l.subscriptions[GenericTransfer] != nil {
-		for _, evt := range evts.ChainBridge_GenericTransfer {
+
+		if l.subscriptions[GenericTransfer] != nil {
+			if event.Name != string(GenericTransfer) {
+				continue
+			}
+
 			l.log.Trace("Handling GenericTransfer event")
-			l.submitMessage(l.subscriptions[GenericTransfer](evt, l.log))
+			l.submitMessage(l.subscriptions[GenericTransfer](event.Fields, l.log))
+		}
+
+		if event.Name == "ParachainSystem.ValidationFunctionApplied" {
+			l.log.Trace("Received ValidationFunctionApplied event")
+
+			if err := l.conn.updateMetadata(); err != nil {
+				l.log.Error("Unable to update Metadata", "error", err)
+			}
 		}
 	}
 
-	if len(evts.System_CodeUpdated) > 0 {
-		l.log.Trace("Received CodeUpdated event")
-		err := l.conn.updateMetatdata()
-		if err != nil {
-			l.log.Error("Unable to update Metadata", "error", err)
-		}
-	}
 }
 
 // submitMessage inserts the chainId into the msg and sends it to the router
