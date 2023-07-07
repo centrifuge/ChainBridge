@@ -202,6 +202,14 @@ type EventFeesFeeToTreasury struct {
 	Topics  []types.Hash
 }
 
+// EventTreasuryUpdatedInactive Temp fix until we move to gsrpc v2
+type EventTreasuryUpdatedInactive struct {
+	Phase       types.Phase
+	Reactivated types.U128
+	Deactivated types.U128
+	Topics      []types.Hash
+}
+
 type cEvents = centEvents.Events
 type Events struct {
 	types.EventRecords
@@ -218,4 +226,5 @@ type Events struct {
 	Fees_FeeToAuthor         []EventFeesFeeToAuthor         //nolint:stylecheck,golint
 	Fees_FeeToBurn           []EventFeesFeeToBurn           //nolint:stylecheck,golint
 	Fees_FeeToTreasury       []EventFeesFeeToTreasury       //nolint:stylecheck,golint
+	Treasury_UpdatedInactive []EventTreasuryUpdatedInactive //nolint:stylecheck,golint
 }
