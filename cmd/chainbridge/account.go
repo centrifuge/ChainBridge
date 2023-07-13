@@ -63,7 +63,7 @@ func handleGenerateCmd(ctx *cli.Context, dHandler *dataHandler) error {
 		password = []byte(pwdflag)
 	}
 
-	_, err := generateKeypair(keytype, dHandler.datadir, password, uint8(ctx.Uint(config.SubkeyNetworkFlag.Name)))
+	_, err := generateKeypair(keytype, dHandler.datadir, password, uint16(ctx.Uint(config.SubkeyNetworkFlag.Name)))
 	if err != nil {
 		return fmt.Errorf("failed to generate key: %w", err)
 	}
@@ -159,7 +159,7 @@ func importPrivKey(ctx *cli.Context, keytype, datadir, key string, password []by
 	if keytype == crypto.Sr25519Type {
 		// generate sr25519 keys
 		network := ctx.Uint(config.SubkeyNetworkFlag.Name)
-		kp, err = sr25519.NewKeypairFromSeed(key, uint8(network))
+		kp, err = sr25519.NewKeypairFromSeed(key, uint16(network))
 		if err != nil {
 			return "", fmt.Errorf("could not generate sr25519 keypair from given string: %w", err)
 		}
@@ -335,7 +335,7 @@ func getKeyFiles(datadir string) ([]string, error) {
 // generateKeypair create a new keypair with the corresponding type and saves it to datadir/keystore/[public key].key
 // in json format encrypted using the specified password
 // it returns the resulting filepath of the new key
-func generateKeypair(keytype, datadir string, password []byte, subNetwork uint8) (string, error) {
+func generateKeypair(keytype, datadir string, password []byte, subNetwork uint16) (string, error) {
 	if password == nil {
 		password = keystore.GetPassword("Enter password to encrypt keystore file:")
 	}
