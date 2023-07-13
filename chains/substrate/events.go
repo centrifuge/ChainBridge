@@ -51,7 +51,7 @@ func fungibleTransferHandler(eventFields map[string]any, log log15.Logger) (msg.
 		return msg.Message{}, err
 	}
 
-	amount, err := getAmount(eventFields)
+	amount, err := getU256(eventFields)
 	if err != nil {
 		return msg.Message{}, err
 	}
@@ -223,7 +223,7 @@ func convertToByteSlice(array []types.U8) ([]byte, error) {
 	return res, nil
 }
 
-func getAmount(eventFields map[string]any) (types.U256, error) {
+func getU256(eventFields map[string]any) (types.U256, error) {
 	for fieldName, fieldValue := range eventFields {
 		if fieldName != "primitive_types.U256.U256" {
 			continue
