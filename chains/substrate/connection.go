@@ -43,7 +43,7 @@ func (c *Connection) getMetadata() (meta types.Metadata) {
 	return meta
 }
 
-func (c *Connection) updateMetatdata() error {
+func (c *Connection) updateMetadata() error {
 	c.metaLock.Lock()
 	meta, err := c.api.RPC.State.GetMetadataLatest()
 	if err != nil {

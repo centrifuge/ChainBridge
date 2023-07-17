@@ -24,6 +24,7 @@ As the writer receives messages from the router, it constructs proposals. If a p
 package substrate
 
 import (
+	"fmt"
 	"github.com/ChainSafe/log15"
 	"github.com/centrifuge/chainbridge-utils/blockstore"
 	"github.com/centrifuge/chainbridge-utils/core"
@@ -31,6 +32,8 @@ import (
 	"github.com/centrifuge/chainbridge-utils/keystore"
 	metrics "github.com/centrifuge/chainbridge-utils/metrics/types"
 	"github.com/centrifuge/chainbridge-utils/msg"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/registry/retriever"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/registry/state"
 )
 
 var _ core.Chain = &Chain{}
@@ -102,8 +105,14 @@ func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- e
 
 	ue := parseUseExtended(cfg)
 
+	eventRetriever, err := retriever.NewDefaultEventRetriever(state.NewEventProvider(conn.api.RPC.State), conn.api.RPC.State)
+
+	if err != nil {
+		return nil, fmt.Errorf("event retriever creation: %w", err)
+	}
+
 	// Setup listener & writer
-	l := NewListener(conn, cfg.Name, cfg.Id, startBlock, logger, bs, stop, sysErr, m)
+	l := NewListener(conn, cfg.Name, cfg.Id, startBlock, logger, bs, stop, sysErr, m, eventRetriever)
 	w := NewWriter(conn, logger, sysErr, m, ue)
 	return &Chain{
 		cfg:      cfg,
