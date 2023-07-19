@@ -213,41 +213,26 @@ func (l *listener) processEvents(hash types.Hash) error {
 	return nil
 }
 
+const MetadataUpdateEvent = "ParachainSystem.ValidationFunctionApplied"
+
 // handleEvents calls the associated handler for all registered event types
 func (l *listener) handleEvents(events []*parser.Event) {
 	for _, event := range events {
-		if l.subscriptions[FungibleTransfer] != nil {
-			if event.Name != string(FungibleTransfer) {
-				continue
-			}
-
-			l.log.Trace("Handling FungibleTransfer event")
+		switch {
+		case l.subscriptions[FungibleTransfer] != nil && event.Name == string(FungibleTransfer):
+			l.log.Debug("Handling FungibleTransfer event")
 			l.submitMessage(l.subscriptions[FungibleTransfer](event.Fields, l.log))
-		}
-
-		if l.subscriptions[NonFungibleTransfer] != nil {
-			if event.Name != string(NonFungibleTransfer) {
-				continue
-			}
-
-			l.log.Trace("Handling NonFungibleTransfer event")
+		case l.subscriptions[NonFungibleTransfer] != nil && event.Name == string(NonFungibleTransfer):
+			l.log.Debug("Handling NonFungibleTransfer event")
 			l.submitMessage(l.subscriptions[NonFungibleTransfer](event.Fields, l.log))
-		}
-
-		if l.subscriptions[GenericTransfer] != nil {
-			if event.Name != string(GenericTransfer) {
-				continue
-			}
-
-			l.log.Trace("Handling GenericTransfer event")
+		case l.subscriptions[GenericTransfer] != nil && event.Name == string(GenericTransfer):
+			l.log.Debug("Handling GenericTransfer event")
 			l.submitMessage(l.subscriptions[GenericTransfer](event.Fields, l.log))
-		}
-
-		if event.Name == "ParachainSystem.ValidationFunctionApplied" {
-			l.log.Trace("Received ValidationFunctionApplied event")
+		case event.Name == MetadataUpdateEvent:
+			l.log.Debug("Received metadata update event")
 
 			if err := l.conn.updateMetadata(); err != nil {
-				l.log.Error("Unable to update Metadata", "error", err)
+				l.log.Error("Unable to update metadata", "error", err)
 			}
 		}
 	}

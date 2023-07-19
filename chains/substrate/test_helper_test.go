@@ -4,6 +4,7 @@
 package substrate
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -30,10 +31,7 @@ var BobTestLogger = newTestLogger("Bob")
 var ThisChain msg.ChainId = 1
 var ForeignChain msg.ChainId = 2
 
-var relayers = []types.AccountID{
-	types.NewAccountID(AliceKey.PublicKey),
-	types.NewAccountID(BobKey.PublicKey),
-}
+var relayers []types.AccountID
 
 var resources = map[msg.ResourceId]utils.Method{
 	// These are taken from the Polkadot JS UI (Chain State -> Constants)
@@ -57,6 +55,24 @@ type testContext struct {
 }
 
 var context testContext
+
+func init() {
+	aliceAccountID, err := types.NewAccountID(AliceKey.PublicKey)
+
+	if err != nil {
+		panic(fmt.Errorf("couldn't create account ID for Alice"))
+	}
+	bobAccountID, err := types.NewAccountID(BobKey.PublicKey)
+
+	if err != nil {
+		panic(fmt.Errorf("couldn't create account ID for Alice"))
+	}
+
+	relayers = []types.AccountID{
+		*aliceAccountID,
+		*bobAccountID,
+	}
+}
 
 func TestMain(m *testing.M) {
 	client, err := utils.CreateClient(AliceKey, TestEndpoint)
