@@ -5,6 +5,9 @@ package substrate
 
 import (
 	"fmt"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/registry/retriever"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/registry/state"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
 	"math/big"
 	"reflect"
 	"testing"
@@ -36,8 +39,14 @@ func newTestListener(client *utils.Client, conn *Connection) (*listener, chan er
 		return nil, nil, nil, err
 	}
 
+	eventRetriever, err := retriever.NewDefaultEventRetriever(state.NewEventProvider(conn.api.RPC.State), conn.api.RPC.State)
+
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("event retriever creation: %w", err)
+	}
+
 	errs := make(chan error)
-	l := NewListener(conn, "Alice", 1, startBlock, AliceTestLogger, &blockstore.EmptyStore{}, make(chan int), errs, nil)
+	l := NewListener(conn, "Alice", 1, startBlock, AliceTestLogger, &blockstore.EmptyStore{}, make(chan int), errs, nil, eventRetriever)
 	l.setRouter(r)
 	err = l.start()
 	if err != nil {
@@ -113,7 +122,7 @@ func Test_GenericTransferEvent(t *testing.T) {
 	// Construct our expected message
 	var rId msg.ResourceId
 	subtest.QueryConst(t, context.client, "Example", "HashId", &rId)
-	hashBz := types.MustHexDecodeString("0x16078eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f2")
+	hashBz := codec.MustHexDecodeString("0x16078eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f2")
 	hash := types.NewHash(hashBz)
 	context.latestOutNonce = context.latestOutNonce + 1
 	expected := msg.NewGenericTransfer(ThisChain, ForeignChain, context.latestOutNonce, rId, hash[:])
@@ -125,7 +134,7 @@ func Test_GenericTransferEvent(t *testing.T) {
 	// Repeat the process to assert nonce and hash change
 
 	// Construct our expected message
-	hashBz = types.MustHexDecodeString("0x16078eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f2")
+	hashBz = codec.MustHexDecodeString("0x16078eaf04151687736326c9fea17e25fc5287613693c912909cb226aa4794f2")
 	hash = types.NewHash(hashBz)
 	context.latestOutNonce = context.latestOutNonce + 1
 	expected = msg.NewGenericTransfer(ThisChain, ForeignChain, context.latestOutNonce, rId, hash[:])

@@ -8,16 +8,16 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-
 	utils "github.com/ChainSafe/ChainBridge/shared/substrate"
 	subtest "github.com/ChainSafe/ChainBridge/shared/substrate/testing"
 	message "github.com/centrifuge/chainbridge-utils/msg"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
 )
 
 func assertProposalState(t *testing.T, conn *Connection, prop *proposal, votes *voteState, hasValue bool) {
 	var voteRes voteState
-	srcId, err := types.Encode(prop.sourceId)
+	srcId, err := codec.Encode(prop.sourceId)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,12 +41,22 @@ func assertProposalState(t *testing.T, conn *Connection, prop *proposal, votes *
 }
 
 func Test_ContainsVote(t *testing.T) {
-	votes := []types.AccountID{types.NewAccountID(AliceKey.PublicKey)}
-	if !containsVote(votes, types.NewAccountID(AliceKey.PublicKey)) {
+	aliceAccountID, err := types.NewAccountID(AliceKey.PublicKey)
+	if err != nil {
+		t.Fatalf("Couldn't create account ID")
+	}
+
+	votes := []types.AccountID{*aliceAccountID}
+	if !containsVote(votes, *aliceAccountID) {
 		t.Error("Voter has votes")
 	}
 
-	if containsVote(votes, types.NewAccountID(BobKey.PublicKey)) {
+	bobAccountID, err := types.NewAccountID(BobKey.PublicKey)
+	if err != nil {
+		t.Fatalf("Couldn't create account ID")
+	}
+
+	if containsVote(votes, *bobAccountID) {
 		t.Error("Voter has not voted")
 	}
 }
@@ -77,9 +87,14 @@ func TestWriter_ResolveMessage_FungibleProposal(t *testing.T) {
 		t.Fatal("Alice failed to resolve the message")
 	}
 
+	aliceAccountID, err := types.NewAccountID(context.writerAlice.conn.key.PublicKey)
+	if err != nil {
+		t.Fatalf("Couldn't create account ID")
+	}
+
 	// Now check if the assetTxProposal exists on chain
 	singleVoteState := &voteState{
-		VotesFor: []types.AccountID{types.NewAccountID(context.writerAlice.conn.key.PublicKey)},
+		VotesFor: []types.AccountID{*aliceAccountID},
 		Status:   voteStatus{IsActive: true},
 	}
 	assertProposalState(t, context.writerAlice.conn, prop, singleVoteState, true)
@@ -90,11 +105,16 @@ func TestWriter_ResolveMessage_FungibleProposal(t *testing.T) {
 		t.Fatalf("Bob failed to resolve the message")
 	}
 
+	bobAccountID, err := types.NewAccountID(context.writerBob.conn.key.PublicKey)
+	if err != nil {
+		t.Fatalf("Couldn't create account ID")
+	}
+
 	// Check the vote was added
 	finalVoteState := &voteState{
 		VotesFor: []types.AccountID{
-			types.NewAccountID(context.writerAlice.conn.key.PublicKey),
-			types.NewAccountID(context.writerBob.conn.key.PublicKey),
+			*aliceAccountID,
+			*bobAccountID,
 		},
 		Status: voteStatus{IsApproved: true},
 	}
@@ -139,9 +159,14 @@ func TestWriter_ResolveMessage_NonFungibleProposal(t *testing.T) {
 		t.Fatal("Alice failed to resolve the message")
 	}
 
+	aliceAccountID, err := types.NewAccountID(context.writerAlice.conn.key.PublicKey)
+	if err != nil {
+		t.Fatalf("Couldn't create account ID")
+	}
+
 	// Now check if the assetTxProposal exists on chain
 	singleVoteState := &voteState{
-		VotesFor: []types.AccountID{types.NewAccountID(context.writerAlice.conn.key.PublicKey)},
+		VotesFor: []types.AccountID{*aliceAccountID},
 		Status:   voteStatus{IsActive: true},
 	}
 	assertProposalState(t, context.writerAlice.conn, prop, singleVoteState, true)
@@ -152,18 +177,23 @@ func TestWriter_ResolveMessage_NonFungibleProposal(t *testing.T) {
 		t.Fatalf("Bob failed to resolve the message")
 	}
 
+	bobAccountID, err := types.NewAccountID(context.writerBob.conn.key.PublicKey)
+	if err != nil {
+		t.Fatalf("Couldn't create account ID")
+	}
+
 	// Check the vote was added
 	finalVoteState := &voteState{
 		VotesFor: []types.AccountID{
-			types.NewAccountID(context.writerAlice.conn.key.PublicKey),
-			types.NewAccountID(context.writerBob.conn.key.PublicKey),
+			*aliceAccountID,
+			*bobAccountID,
 		},
 		Status: voteStatus{IsApproved: true},
 	}
 	assertProposalState(t, context.writerAlice.conn, prop, finalVoteState, true)
 
 	// Assert token exists
-	subtest.AssertOwnerOf(t, context.client, tokenId, types.NewAccountID(BobKey.PublicKey))
+	subtest.AssertOwnerOf(t, context.client, tokenId, *bobAccountID)
 
 	select {
 	case err = <-context.wSysErr:
@@ -197,9 +227,14 @@ func TestWriter_ResolveMessage_GenericProposal(t *testing.T) {
 		t.Fatal("Alice failed to resolve the message")
 	}
 
+	aliceAccountID, err := types.NewAccountID(context.writerAlice.conn.key.PublicKey)
+	if err != nil {
+		t.Fatalf("Couldn't create account ID")
+	}
+
 	// Now check if the assetTxProposal exists on chain
 	singleVoteState := &voteState{
-		VotesFor: []types.AccountID{types.NewAccountID(context.writerAlice.conn.key.PublicKey)},
+		VotesFor: []types.AccountID{*aliceAccountID},
 		Status:   voteStatus{IsActive: true},
 	}
 	assertProposalState(t, context.writerAlice.conn, prop, singleVoteState, true)
@@ -210,11 +245,16 @@ func TestWriter_ResolveMessage_GenericProposal(t *testing.T) {
 		t.Fatalf("Bob failed to resolve the message")
 	}
 
+	bobAccountID, err := types.NewAccountID(context.writerBob.conn.key.PublicKey)
+	if err != nil {
+		t.Fatalf("Couldn't create account ID")
+	}
+
 	// Check the vote was added
 	finalVoteState := &voteState{
 		VotesFor: []types.AccountID{
-			types.NewAccountID(context.writerAlice.conn.key.PublicKey),
-			types.NewAccountID(context.writerBob.conn.key.PublicKey),
+			*aliceAccountID,
+			*bobAccountID,
 		},
 		Status: voteStatus{IsApproved: true},
 	}
@@ -253,9 +293,14 @@ func TestWriter_ResolveMessage_Duplicate(t *testing.T) {
 		t.Fatal("Alice failed to resolve the message")
 	}
 
+	aliceAccountID, err := types.NewAccountID(context.writerAlice.conn.key.PublicKey)
+	if err != nil {
+		t.Fatalf("Couldn't create account ID")
+	}
+
 	// Now check if the proposal exists on chain
 	singleVoteState := &voteState{
-		VotesFor: []types.AccountID{types.NewAccountID(context.writerAlice.conn.key.PublicKey)},
+		VotesFor: []types.AccountID{*aliceAccountID},
 		Status:   voteStatus{IsActive: true},
 	}
 	assertProposalState(t, context.writerAlice.conn, prop, singleVoteState, true)
