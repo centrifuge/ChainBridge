@@ -6,6 +6,8 @@ package substrate
 import (
 	"fmt"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types/extrinsic"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types/extrinsic/extensions"
 	"sync"
 
 	utils "github.com/ChainSafe/ChainBridge/shared/substrate"
@@ -97,7 +99,7 @@ func (c *Connection) SubmitTx(method utils.Method, args ...interface{}) error {
 	if err != nil {
 		return fmt.Errorf("failed to construct call: %w", err)
 	}
-	ext := types.NewExtrinsic(call)
+	ext := extrinsic.NewDynamicExtrinsic(&call)
 
 	// Get latest runtime version
 	rv, err := c.api.RPC.State.GetRuntimeVersionLatest()
@@ -116,24 +118,25 @@ func (c *Connection) SubmitTx(method utils.Method, args ...interface{}) error {
 	}
 
 	// Sign the extrinsic
-	o := types.SignatureOptions{
-		BlockHash:          c.genesisHash,
-		Era:                types.ExtrinsicEra{IsMortalEra: false},
-		GenesisHash:        c.genesisHash,
-		Nonce:              types.NewUCompactFromUInt(uint64(c.nonce)),
-		SpecVersion:        rv.SpecVersion,
-		Tip:                types.NewUCompactFromUInt(0),
-		TransactionVersion: rv.TransactionVersion,
-	}
+	err = ext.Sign(
+		*c.key,
+		&meta,
+		extrinsic.WithEra(types.ExtrinsicEra{IsImmortalEra: true}, c.genesisHash),
+		extrinsic.WithNonce(types.NewUCompactFromUInt(uint64(c.nonce))),
+		extrinsic.WithTip(types.NewUCompactFromUInt(0)),
+		extrinsic.WithSpecVersion(rv.SpecVersion),
+		extrinsic.WithTransactionVersion(rv.TransactionVersion),
+		extrinsic.WithGenesisHash(c.genesisHash),
+		extrinsic.WithMetadataMode(extensions.CheckMetadataModeDisabled, extensions.CheckMetadataHash{Hash: types.NewEmptyOption[types.H256]()}),
+	)
 
-	err = ext.Sign(*c.key, o)
 	if err != nil {
 		c.nonceLock.Unlock()
 		return err
 	}
 
 	// Submit and watch the extrinsic
-	sub, err := c.api.RPC.Author.SubmitAndWatchExtrinsic(ext)
+	sub, err := c.api.RPC.Author.SubmitAndWatchDynamicExtrinsic(ext)
 	c.nonce++
 	c.nonceLock.Unlock()
 	if err != nil {
