@@ -1,11 +1,10 @@
 module github.com/ChainSafe/ChainBridge
 
-go 1.18
+go 1.21
 
-// NOTE - this is a specific branch - https://github.com/centrifuge/go-substrate-rpc-client/tree/remove-claims-event,
-// that does not have the `Claims_Claimed` event since it is colliding with the one that we have in the claims pallet
-// of Centrifuge chain.
-require github.com/centrifuge/go-substrate-rpc-client/v4 v4.0.17-0.20230713095918-d6e1d43a5270
+toolchain go1.22.4
+
+require github.com/centrifuge/go-substrate-rpc-client/v4 v4.2.2-0.20240724202640-8bafff8c25ea
 
 require (
 	github.com/ChainSafe/log15 v1.0.0
@@ -55,7 +54,7 @@ require (
 	github.com/stretchr/objx v0.1.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	github.com/tklauser/numcpus v0.2.2 // indirect
-	github.com/vedhavyas/go-subkey v1.0.4 // indirect
+	github.com/vedhavyas/go-subkey/v2 v2.0.0 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
