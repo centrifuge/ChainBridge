@@ -6,16 +6,14 @@ package substrate
 import (
 	"errors"
 	"fmt"
-	"math/big"
-
 	"github.com/ChainSafe/log15"
 	"github.com/centrifuge/chainbridge-utils/msg"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/registry"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
-	"github.com/centrifuge/go-substrate-rpc-client/v4/types/codec"
 )
 
 type eventName string
-type eventHandler func(map[string]any, log15.Logger) (msg.Message, error)
+type eventHandler func(registry.DecodedFields, log15.Logger) (msg.Message, error)
 
 const FungibleTransfer eventName = "ChainBridge.FungibleTransfer"
 const NonFungibleTransfer eventName = "ChainBridge.NonFungibleTransfer"
@@ -30,7 +28,7 @@ var Subscriptions = []struct {
 	{GenericTransfer, genericTransferHandler},
 }
 
-func fungibleTransferHandler(eventFields map[string]any, log log15.Logger) (msg.Message, error) {
+func fungibleTransferHandler(eventFields registry.DecodedFields, log log15.Logger) (msg.Message, error) {
 	chainID, err := getFieldValueAsType[types.U8]("ChainId", eventFields)
 	if err != nil {
 		return msg.Message{}, err
@@ -51,7 +49,7 @@ func fungibleTransferHandler(eventFields map[string]any, log log15.Logger) (msg.
 		return msg.Message{}, err
 	}
 
-	amount, err := getU256(eventFields)
+	amount, err := getFieldValueAsType[types.U256]("primitive_types.U256.U256", eventFields)
 	if err != nil {
 		return msg.Message{}, err
 	}
@@ -73,13 +71,13 @@ func fungibleTransferHandler(eventFields map[string]any, log log15.Logger) (msg.
 	), nil
 }
 
-func nonFungibleTransferHandler(_ map[string]any, log log15.Logger) (msg.Message, error) {
+func nonFungibleTransferHandler(_ registry.DecodedFields, log log15.Logger) (msg.Message, error) {
 	log.Warn("Got non-fungible transfer event!")
 
 	return msg.Message{}, errors.New("non-fungible transfer not supported")
 }
 
-func genericTransferHandler(eventFields map[string]any, log log15.Logger) (msg.Message, error) {
+func genericTransferHandler(eventFields registry.DecodedFields, log log15.Logger) (msg.Message, error) {
 	chainID, err := getFieldValueAsType[types.U8]("ChainId", eventFields)
 	if err != nil {
 		return msg.Message{}, err
@@ -130,26 +128,26 @@ func to32Bytes(array []types.U8) ([32]byte, error) {
 	return res, nil
 }
 
-func getFieldValueAsType[T any](fieldName string, eventFields map[string]any) (T, error) {
+func getFieldValueAsType[T any](fieldName string, eventFields registry.DecodedFields) (T, error) {
 	var t T
 
-	for name, value := range eventFields {
-		if name == fieldName {
-			if v, ok := value.(T); ok {
+	for _, field := range eventFields {
+		if field.Name == fieldName {
+			if v, ok := field.Value.(T); ok {
 				return v, nil
 			}
 
-			return t, fmt.Errorf("field type mismatch, expected %T, got %T", t, value)
+			return t, fmt.Errorf("field type mismatch, expected %T, got %T", t, field.Value)
 		}
 	}
 
 	return t, fmt.Errorf("field with name '%s' not found", fieldName)
 }
 
-func getFieldValueAsSliceOfType[T any](fieldName string, eventFields map[string]any) ([]T, error) {
-	for name, value := range eventFields {
-		if name == fieldName {
-			value, ok := value.([]any)
+func getFieldValueAsSliceOfType[T any](fieldName string, eventFields registry.DecodedFields) ([]T, error) {
+	for _, field := range eventFields {
+		if field.Name == fieldName {
+			value, ok := field.Value.([]any)
 
 			if !ok {
 				return nil, errors.New("field value not an array")
@@ -168,10 +166,10 @@ func getFieldValueAsSliceOfType[T any](fieldName string, eventFields map[string]
 	return nil, fmt.Errorf("field with name '%s' not found", fieldName)
 }
 
-func getFieldValueAsByteSlice(fieldName string, eventFields map[string]any) ([]byte, error) {
-	for name, value := range eventFields {
-		if name == fieldName {
-			value, ok := value.([]any)
+func getFieldValueAsByteSlice(fieldName string, eventFields registry.DecodedFields) ([]byte, error) {
+	for _, field := range eventFields {
+		if field.Name == fieldName {
+			value, ok := field.Value.([]any)
 
 			if !ok {
 				return nil, errors.New("field value not an array")
@@ -221,59 +219,4 @@ func convertToByteSlice(array []types.U8) ([]byte, error) {
 	}
 
 	return res, nil
-}
-
-func getU256(eventFields map[string]any) (types.U256, error) {
-	for fieldName, fieldValue := range eventFields {
-		if fieldName != "primitive_types.U256.U256" {
-			continue
-		}
-
-		innerField, ok := fieldValue.(map[string]any)
-		if !ok {
-			return types.NewU256(*big.NewInt(0)), errors.New("unexpected amount field structure")
-		}
-
-		innerFieldVal, ok := innerField["[u64; 4]"]
-		if !ok {
-			return types.NewU256(*big.NewInt(0)), errors.New("amount field key not found")
-		}
-
-		slice, ok := innerFieldVal.([]any)
-		if !ok {
-			return types.NewU256(*big.NewInt(0)), errors.New("inner field value not a slice")
-		}
-
-		val, err := convertSliceToType[types.U64](slice)
-
-		if err != nil {
-			return types.NewU256(*big.NewInt(0)), err
-		}
-
-		if len(val) != 4 {
-			return types.NewU256(*big.NewInt(0)), errors.New("slice length mismatch")
-		}
-
-		var r [4]types.U64
-
-		for i, item := range val {
-			r[i] = item
-		}
-
-		encVal, err := codec.Encode(r)
-
-		if err != nil {
-			return types.NewU256(*big.NewInt(0)), errors.New("couldn't encode amount val")
-		}
-
-		var res types.U256
-
-		if err := codec.Decode(encVal, &res); err != nil {
-			return types.NewU256(*big.NewInt(0)), errors.New("couldn't decode amount")
-		}
-
-		return res, nil
-	}
-
-	return types.NewU256(*big.NewInt(0)), errors.New("amount field not found")
 }
