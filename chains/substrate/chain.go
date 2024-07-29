@@ -7,19 +7,18 @@ The current supported transfer types are Fungible, Nonfungible, and generic.
 
 There are 3 major components: the connection, the listener, and the writer.
 
-Connection
+# Connection
 
 The Connection handles connecting to the substrate client, and submitting transactions to the client.
 It also handles state queries. The connection is shared by the writer and listener.
 
-Listener
+# Listener
 
 The substrate listener polls blocks and parses the associated events for the three transfer types. It then forwards these into the router.
 
-Writer
+# Writer
 
 As the writer receives messages from the router, it constructs proposals. If a proposal is still active, the writer will attempt to vote on it. Resource IDs are resolved to method name on-chain, which are then used in the proposals when constructing the resulting Call struct.
-
 */
 package substrate
 
@@ -32,8 +31,10 @@ import (
 	"github.com/centrifuge/chainbridge-utils/keystore"
 	metrics "github.com/centrifuge/chainbridge-utils/metrics/types"
 	"github.com/centrifuge/chainbridge-utils/msg"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/registry"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/registry/retriever"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/registry/state"
+	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
 )
 
 var _ core.Chain = &Chain{}
@@ -105,7 +106,13 @@ func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- e
 
 	ue := parseUseExtended(cfg)
 
-	eventRetriever, err := retriever.NewDefaultEventRetriever(state.NewEventProvider(conn.api.RPC.State), conn.api.RPC.State)
+	// u256 is represented as [u64;4]. We use this override to skip extra processing when decoding fields with this type.
+	u256FieldOverride := registry.FieldOverride{
+		FieldLookupIndex: 142,
+		FieldDecoder:     &registry.ValueDecoder[types.U256]{},
+	}
+
+	eventRetriever, err := retriever.NewDefaultEventRetriever(state.NewEventProvider(conn.api.RPC.State), conn.api.RPC.State, u256FieldOverride)
 
 	if err != nil {
 		return nil, fmt.Errorf("event retriever creation: %w", err)
