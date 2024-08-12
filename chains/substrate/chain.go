@@ -62,6 +62,8 @@ func checkBlockstore(bs *blockstore.Blockstore, startBlock uint64) (uint64, erro
 	}
 }
 
+const U256LookupIndex = 89
+
 func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- error, m *metrics.ChainMetrics) (*Chain, error) {
 	kp, err := keystore.KeypairFromAddress(cfg.From, keystore.SubChain, cfg.KeystorePath, cfg.Insecure)
 	if err != nil {
@@ -108,7 +110,7 @@ func InitializeChain(cfg *core.ChainConfig, logger log15.Logger, sysErr chan<- e
 
 	// u256 is represented as [u64;4]. We use this override to skip extra processing when decoding fields with this type.
 	u256FieldOverride := registry.FieldOverride{
-		FieldLookupIndex: 142,
+		FieldLookupIndex: U256LookupIndex,
 		FieldDecoder:     &registry.ValueDecoder[types.U256]{},
 	}
 
