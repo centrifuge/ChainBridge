@@ -54,6 +54,9 @@ func (w *writer) proposalIsPassed(srcId msg.ChainId, nonce msg.Nonce, dataHash [
 		w.log.Error("Failed to check proposal existence", "err", err)
 		return false
 	}
+
+	w.log.Info("Proposal status", "nonce", nonce, "status", prop.Status)
+
 	return prop.Status == PassedStatus
 }
 
